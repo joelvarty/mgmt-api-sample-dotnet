@@ -8,24 +8,54 @@ var builder = new ConfigurationBuilder()
 
 var config = builder.Build();
 
-var token = config["Agility:AuthToken"];
+var authToken = config["Agility:AuthToken"];
+var guid = config["Agility:InstanceGuid"];
+var locale = config["Agility:Locale"];
 
-Console.WriteLine($"Config val AgilityAuthToken");
-Console.WriteLine(token);
+if (string.IsNullOrWhiteSpace(authToken))
+{
+	Console.WriteLine($"No auth token found. Please authenticate.");
+	return;
+}
+
+if (string.IsNullOrWhiteSpace(guid) || string.IsNullOrWhiteSpace(locale))
+{
+	Console.WriteLine($"No guid or locale found in app settings.");
+	return;
+}
+
+//initialize the Options Class
+agility.models.Options options = new agility.models.Options();
+
+options.token = authToken;
+options.guid = guid;
+options.locale = locale;
+
+//Initialize the Method Class
+ContentMethods contentMethods = new ContentMethods(options);
+
+//make the request: get a content item with the ID '109'
+var contentItem = await contentMethods.GetContentItem(109);
+
+// See https://aka.ms/new-console-template for more information
+if (contentItem == null)
+{
+	Console.WriteLine($"Could not get content item");
+	return;
+}
+
+Console.WriteLine($"Got content item.  Version ID: {contentItem.properties.versionID}, title: {contentItem.GetField("title", typeof(string))}");
 
 
-// //initialize the Options Class
-// agility.models.Options options = new agility.models.Options();
+contentItem.fields["Title"] = "Travel Tipe 2001";
+var resp = await contentMethods.SaveContentItem(contentItem);
 
-// options.token = "<<Provide Auth Token>>";
-// options.guid = "<<Provide the Guid of the Website>>";
-// options.locale = "<<Provide the locale of the Website>>"; //Example: en-us
+Console.WriteLine($"Saved content item {resp}");
 
-// //Initialize the Method Class
-// ContentMethods contentMethods = new ContentMethods(options);
 
-// //make the request: get a content item with the ID '22'
-// var contentItem = await contentMethods.GetContentItem(22);
 
-// // See https://aka.ms/new-console-template for more information
-// Console.WriteLine("Hello, World!");
+
+
+
+
+
